@@ -1,0 +1,14 @@
+{
+  "id": "character-import",
+  "name": "Импорт персонажей",
+  "version": "0.1.0",
+  "description": "Импорт персонажа с листа TTG Club (экспорт JSON): характеристики, класс, вид, предыстория, владения, черты, инвентарь и счётчики — одним актёром мира.",
+  "icon": "tabler:user-plus",
+  "author": "TTG Club",
+  "compatibleSystems": ["dnd5e-2024"],
+  "permissions": ["actor-write", "modals", "notifications", "settings"],
+  "client": {
+    "entry": "client.js",
+    "styles": ["styles.css"]
+  }
+}
