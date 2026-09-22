@@ -15,7 +15,12 @@
   import { computed, onMounted, ref } from 'vue';
 
   import { collectWarnings } from '@/convert/actor';
-  import { runImport, TARGET_SYSTEM_ID } from '@/import/runImport';
+  import {
+    HOST_TOO_OLD_MESSAGE,
+    isActorWriteSupported,
+    runImport,
+    TARGET_SYSTEM_ID,
+  } from '@/import/runImport';
   import { isSheetFileName, parseSheetFile, summarizeSheet } from '@/sheet/parse';
 
   const props = defineProps<{
@@ -57,13 +62,20 @@
     () => props.api.system.getActiveSystemId() === TARGET_SYSTEM_ID,
   );
 
+  /** Умеет ли приложение создавать актёров из модуля */
+  const isHostSupported = computed(() => isActorWriteSupported(props.api));
+
   /** Что лист несёт, а импорт не переносит */
   const warnings = computed(() =>
     sheet.value ? collectWarnings(sheet.value) : [],
   );
 
   const canImport = computed(
-    () => Boolean(sheet.value) && !isImporting.value && !result.value,
+    () =>
+      Boolean(sheet.value)
+      && isHostSupported.value
+      && !isImporting.value
+      && !result.value,
   );
 
   onMounted(async () => {
@@ -190,6 +202,13 @@
 
 <template>
   <div class="ci-root">
+    <p
+      v-if="!isHostSupported"
+      class="ci-alert ci-alert--error"
+    >
+      {{ HOST_TOO_OLD_MESSAGE }}
+    </p>
+
     <p
       v-if="!isSystemMatching"
       class="ci-alert ci-alert--warning"

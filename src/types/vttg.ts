@@ -67,15 +67,25 @@ export interface VttgActor {
   name: string;
 }
 
+/** Секция записи актёров — появилась в хосте вместе с этим модулем */
+export interface VttgActorsApi {
+  /** Создаёт актёра и ждёт подтверждения сервера */
+  create: (input: VttgActorCreateInput) => Promise<VttgActor>;
+  /** Обновляет актёра: патч сливается с текущим состоянием */
+  update: (actorId: string, patch: Record<string, unknown>) => void;
+}
+
 /** Часть `ClientModuleAPI`, которой пользуется модуль. */
 export interface VttgModuleApi {
-  /** Актёры: запись */
-  actors: {
-    /** Создаёт актёра и ждёт подтверждения сервера */
-    create: (input: VttgActorCreateInput) => Promise<VttgActor>;
-    /** Обновляет актёра: патч сливается с текущим состоянием */
-    update: (actorId: string, patch: Record<string, unknown>) => void;
-  };
+  /**
+   * Актёры: запись.
+   *
+   * Необязательна НАМЕРЕННО: модуль ставят и в старое приложение, где секции
+   * ещё нет. Без неё вызов `api.actors.create` дал бы невнятное
+   * «Cannot read properties of undefined», поэтому модуль проверяет наличие
+   * секции сам и объясняет пользователю, что делать.
+   */
+  actors?: VttgActorsApi;
 
   /** Сцена и мир: чтение */
   scene: {

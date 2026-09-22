@@ -76,12 +76,25 @@ describe('runImport', () => {
     });
   });
 
+  it('объясняет, что приложение старое, вместо падения на undefined', async () => {
+    const { api } = createApiStub();
+
+    delete api.actors;
+
+    await expect(runImport(api, sheet, options)).rejects.toThrowError(
+      /нет секции «api\.actors»/,
+    );
+  });
+
   it('не проглатывает отказ сервера', async () => {
     const { api } = createApiStub();
 
-    api.actors.create = vi.fn(async () => {
-      throw new Error('Сервер не подтвердил создание актёра');
-    });
+    api.actors = {
+      create: vi.fn(async () => {
+        throw new Error('Сервер не подтвердил создание актёра');
+      }),
+      update: vi.fn(),
+    };
 
     await expect(runImport(api, sheet, options)).rejects.toThrowError(
       /не подтвердил создание/,

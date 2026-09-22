@@ -17,6 +17,22 @@ import { buildActorDraft } from '@/convert/actor';
 /** Система мира, для которой собирается актёр */
 export const TARGET_SYSTEM_ID = 'dnd5e-2024';
 
+/** Что сказать, если приложение старое и записи актёров в нём ещё нет */
+export const HOST_TOO_OLD_MESSAGE =
+  'Это приложение не умеет создавать персонажей из модуля: в его API модулей '
+  + 'нет секции «api.actors» (разрешение actor-write). Нужна сборка VTTG, где '
+  + 'она уже есть.';
+
+/**
+ * Проверяет, умеет ли хост создавать актёров.
+ *
+ * @param api - API модуля от хоста
+ * @returns true, если секция записи актёров на месте
+ */
+export function isActorWriteSupported(api: VttgModuleApi): boolean {
+  return typeof api.actors?.create === 'function';
+}
+
 /** Итог импорта — то, что показывается пользователю после создания */
 export interface ImportResult {
   /** ID созданного актёра */
@@ -38,17 +54,24 @@ export interface ImportResult {
  * @param sheet - разобранный лист персонажа
  * @param options - настройки импорта
  * @returns итог импорта
- * @throws Error если сервер не подтвердил создание актёра
+ * @throws Error если хост не поддерживает запись актёров или сервер не
+ *   подтвердил создание
  */
 export async function runImport(
   api: VttgModuleApi,
   sheet: CharacterSheet,
   options: ImportOptions,
 ): Promise<ImportResult> {
+  const actors = api.actors;
+
+  if (!actors) {
+    throw new Error(HOST_TOO_OLD_MESSAGE);
+  }
+
   const ownerId = api.scene.getLoggedUserId();
   const { actor, warnings } = buildActorDraft(sheet, options, ownerId);
 
-  const created = await api.actors.create(actor);
+  const created = await actors.create(actor);
 
   return {
     actorId: created.id,
