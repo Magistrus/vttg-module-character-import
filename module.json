@@ -6,7 +6,13 @@
   "icon": "tabler:user-plus",
   "author": "TTG Club",
   "compatibleSystems": ["dnd5e-2024"],
-  "permissions": ["actor-write", "modals", "notifications", "settings"],
+  "permissions": [
+    "actor-write",
+    "assets",
+    "modals",
+    "notifications",
+    "settings"
+  ],
   "client": {
     "entry": "client.js",
     "styles": ["styles.css"]

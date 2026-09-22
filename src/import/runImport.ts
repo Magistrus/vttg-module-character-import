@@ -14,6 +14,8 @@ import type { VttgModuleApi } from '@/types/vttg';
 
 import { buildActorDraft } from '@/convert/actor';
 
+import { importAvatar } from './avatar';
+
 /** Система мира, для которой собирается актёр */
 export const TARGET_SYSTEM_ID = 'dnd5e-2024';
 
@@ -69,7 +71,15 @@ export async function runImport(
   }
 
   const ownerId = api.scene.getLoggedUserId();
-  const { actor, warnings } = buildActorDraft(sheet, options, ownerId);
+  const actorName = options.name.trim() || sheet.name;
+  const avatar = await importAvatar(api, sheet.avatarUrl, actorName);
+
+  const { actor, warnings } = buildActorDraft(
+    sheet,
+    options,
+    ownerId,
+    avatar.path,
+  );
 
   const created = await actors.create(actor);
 
@@ -78,6 +88,6 @@ export async function runImport(
     actorName: created.name,
     featureCount: actor.features.length,
     itemCount: actor.equipment.length,
-    warnings,
+    warnings: avatar.warning ? [...warnings, avatar.warning] : warnings,
   };
 }

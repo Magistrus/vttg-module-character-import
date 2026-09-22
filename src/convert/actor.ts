@@ -295,18 +295,27 @@ function buildActorSystem(sheet: CharacterSheet): DndActorSystem {
 }
 
 /**
- * Собирает настройки токена: зрение персонажа с листа.
+ * Собирает настройки токена: картинка и зрение персонажа с листа.
+ *
+ * Картинка кладётся ИМЕННО в `token.imageUrl`: фишку на сцене рисует только
+ * это поле, на `avatar` актёра сцена не смотрит — с одним лишь аватаром токен
+ * остался бы пустым.
  *
  * @param sheet - лист персонажа
+ * @param avatar - путь или ссылка на картинку (null — картинки нет)
  * @returns настройки токена актёра
  */
-function buildToken(sheet: CharacterSheet): VttgActorCreateInput['token'] {
+function buildToken(
+  sheet: CharacterSheet,
+  avatar: string | null,
+): VttgActorCreateInput['token'] {
   const vision = sheet.vision ?? {};
   const darkvision = Number(vision.darkvision ?? 0);
   const normal = Number(vision.normal ?? 0);
 
   return {
     showName: false,
+    ...(avatar ? { imageUrl: avatar } : {}),
     vision: {
       enabled: true,
       range: Number.isFinite(normal) ? normal : 0,
@@ -322,20 +331,24 @@ function buildToken(sheet: CharacterSheet): VttgActorCreateInput['token'] {
  * @param sheet - разобранный лист персонажа
  * @param options - настройки импорта
  * @param ownerId - ID пользователя, который импортирует (null — неизвестен)
+ * @param avatar - готовый путь к картинке: файл мира, если её удалось
+ *   перенести, иначе ссылка с листа. `undefined` — брать ссылку с листа как есть
  * @returns черновик актёра и список предупреждений
  */
 export function buildActorDraft(
   sheet: CharacterSheet,
   options: ImportOptions,
   ownerId: string | null,
+  avatar?: string | null,
 ): ActorDraft {
   const description = options.importPersonality ? buildDescription(sheet) : '';
+  const picture = avatar === undefined ? sheet.avatarUrl ?? null : avatar;
 
   const actor: CharacterActorInput = {
     name: options.name.trim() || sheet.name,
-    ...(sheet.avatarUrl ? { avatar: sheet.avatarUrl } : {}),
+    ...(picture ? { avatar: picture } : {}),
     ...(description ? { description } : {}),
-    token: buildToken(sheet),
+    token: buildToken(sheet, picture),
     isPublic: options.isPublic,
     ...(options.assignOwner && ownerId ? { ownerIds: [ownerId] } : {}),
     system: buildActorSystem(sheet),

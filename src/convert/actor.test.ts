@@ -49,6 +49,33 @@ describe('buildActorDraft — нейтральная часть', () => {
     expect(actor.ownerIds).toEqual(['user-1']);
   });
 
+  it('кладёт картинку и в аватар, и в токен — сцена читает только токен', () => {
+    const withPicture = parseSheetText(
+      JSON.stringify({ ...fixture, avatarUrl: 'https://ttg.club/media/gogi.png' }),
+    );
+
+    const { actor: fromSheet } = buildActorDraft(withPicture, fullOptions, null);
+
+    expect(fromSheet.avatar).toBe('https://ttg.club/media/gogi.png');
+    expect(fromSheet.token?.imageUrl).toBe('https://ttg.club/media/gogi.png');
+
+    // Картинку перенесли в файлы мира — в актёра едет путь оттуда.
+    const { actor: uploaded } = buildActorDraft(
+      withPicture,
+      fullOptions,
+      null,
+      'avatars/gogi.webp',
+    );
+
+    expect(uploaded.avatar).toBe('avatars/gogi.webp');
+    expect(uploaded.token?.imageUrl).toBe('avatars/gogi.webp');
+  });
+
+  it('не выдумывает картинку, если её нет на листе', () => {
+    expect(actor.avatar).toBeUndefined();
+    expect(actor.token?.imageUrl).toBeUndefined();
+  });
+
   it('переносит зрение персонажа в настройки токена', () => {
     expect(actor.token?.vision).toEqual({
       enabled: true,

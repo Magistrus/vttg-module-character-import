@@ -87,6 +87,24 @@ export interface VttgModuleApi {
    */
   actors?: VttgActorsApi;
 
+  /**
+   * Файлы мира.
+   *
+   * Необязательна по той же причине, что и `actors`: в старом приложении
+   * секции может не быть, а без разрешения `assets` её методы бросают отказ.
+   * Модуль обращается к ней только ради картинки токена и переживает провал.
+   */
+  assets?: {
+    /** Загружает файл в папку мира */
+    upload: (
+      folderPath: string,
+      fileName: string,
+      data: Blob,
+    ) => Promise<{ url: string; relativePath: string; warning?: string }>;
+    /** Превращает относительный путь файла мира в URL для браузера */
+    resolveUrl: (relativePath: string) => string | null;
+  };
+
   /** Сцена и мир: чтение */
   scene: {
     /** Является ли текущий пользователь мастером */

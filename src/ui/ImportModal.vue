@@ -285,6 +285,16 @@
       </div>
 
       <div class="ci-summary__row">
+        <span class="ci-summary__key">Картинка</span>
+
+        <span class="ci-summary__value">
+          {{ summary.hasAvatar
+            ? 'есть — станет токеном'
+            : 'в файле нет — задайте аватар на сайте и экспортируйте лист заново' }}
+        </span>
+      </div>
+
+      <div class="ci-summary__row">
         <span class="ci-summary__key">Найдено</span>
 
         <span class="ci-summary__value">
@@ -383,6 +393,18 @@
     >
       Персонаж «{{ result.actorName }}» создан: черт — {{ result.featureCount }},
       предметов — {{ result.itemCount }}. Он уже в списке персонажей мира.
+
+      <ul
+        v-if="result.warnings.length > 0"
+        class="ci-list"
+      >
+        <li
+          v-for="warning in result.warnings"
+          :key="warning"
+        >
+          {{ warning }}
+        </li>
+      </ul>
     </div>
 
     <div class="ci-actions">
