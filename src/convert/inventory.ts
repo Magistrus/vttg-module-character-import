@@ -20,6 +20,8 @@ import type {
   DndWeaponCategory,
 } from '@/types/dnd5e';
 
+import { richTextToMarkdown } from '@/sheet/richText';
+
 import { isAbilityKey, skillKeyByLabel, toDamageType } from './keys';
 
 /** Категория предмета на листе для магических предметов */
@@ -308,6 +310,23 @@ function buildItemEffects(
 }
 
 /**
+ * Собирает описание предмета.
+ *
+ * У предмета из справочника сайта описания на листе нет — только заметка
+ * владельца (`passiveNote`). А у предмета, созданного на сайте (`custom:…`),
+ * описание лежит прямо в листе, и кроме как здесь его потом взять неоткуда:
+ * в компендиуме мира такого предмета нет.
+ *
+ * @param item - предмет с листа
+ * @returns описание в markdown: своё описание, затем заметка владельца
+ */
+function buildItemDescription(item: SheetInventoryItem): string {
+  return [richTextToMarkdown(item.description), item.passiveNote?.trim() ?? '']
+    .filter((part) => part.length > 0)
+    .join('\n\n');
+}
+
+/**
  * Определяет тип предмета для системы.
  *
  * @param item - предмет с листа
@@ -349,7 +368,7 @@ export function buildInventoryItem(
   return {
     id: itemId,
     name: item.name,
-    description: item.passiveNote ?? '',
+    description: buildItemDescription(item),
     type,
     ...(item.typesLabel ? { typeLabel: item.typesLabel } : {}),
     quantity: item.quantity ?? 1,

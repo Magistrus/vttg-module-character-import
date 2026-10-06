@@ -30,12 +30,13 @@ import { buildInventory, collectUnmappedBonusItems } from './inventory';
 import { CURRENCY_BY_COIN, isAbilityKey, sizeByLabel } from './keys';
 import { buildCarryingCapacity, buildPreparedLimit } from './limits';
 import { buildProficiencies } from './proficiencies';
+import { buildUsedSpellSlots } from './slots';
 
 /** Базовый КД без доспеха */
 const DEFAULT_ARMOR_CLASS = 10;
 
-/** Количество кругов заклинаний в D&D 5e */
-const SPELL_LEVELS = 9;
+/** Префикс ссылки на контент, созданный пользователем на сайте */
+const CUSTOM_ENTRY_PREFIX = 'custom:';
 
 /** ID прибавки к лимиту подготовленных заклинаний, перенесённой с листа */
 const PREPARED_SPELLS_BONUS_ID = 'sheet-prepared-spells';
@@ -223,6 +224,20 @@ function resolveInitiativeAbility(
 }
 
 /**
+ * Проверяет, создано ли заклинание самим пользователем на сайте.
+ *
+ * Такие заклинания приходят со ссылкой `custom:<uuid>` вместо слага книги
+ * (`hex-phb`): в компендиуме мира их нет, и совет «добавьте из компендиума»
+ * к ним не подходит.
+ *
+ * @param url - ссылка заклинания с листа
+ * @returns true, если заклинание своё
+ */
+function isCustomSpell(url: string | undefined): boolean {
+  return url?.startsWith(CUSTOM_ENTRY_PREFIX) ?? false;
+}
+
+/**
  * Собирает предупреждения о том, что лист несёт, а импорт не переносит.
  *
  * @param sheet - лист персонажа
@@ -232,12 +247,22 @@ export function collectWarnings(sheet: CharacterSheet): string[] {
   const warnings: string[] = [];
 
   const spells = collectSheetSpells(sheet, resolveTotalLevel(sheet));
+  const bookSpells = spells.filter((spell) => !isCustomSpell(spell.url));
+  const customSpells = spells.filter((spell) => isCustomSpell(spell.url));
 
-  if (spells.length > 0) {
+  if (bookSpells.length > 0) {
     warnings.push(
-      `Заклинания (${spells.length}) не переносятся: их механику задаёт компендиум `
-        + 'мира, а лист несёт только названия — добавьте их персонажу из '
-        + `компендиума после импорта: ${spells.map((spell) => spell.name).join(', ')}.`,
+      `Заклинания (${bookSpells.length}) не переносятся: их механику задаёт `
+        + 'компендиум мира — добавьте их персонажу из компендиума после импорта: '
+        + `${bookSpells.map((spell) => spell.name).join(', ')}.`,
+    );
+  }
+
+  if (customSpells.length > 0) {
+    warnings.push(
+      `Свои заклинания с сайта (${customSpells.length}) не переносятся, и в `
+        + 'компендиуме мира их нет — создайте их в мире заново: '
+        + `${customSpells.map((spell) => spell.name).join(', ')}.`,
     );
   }
 
@@ -327,8 +352,7 @@ function buildActorSystem(sheet: CharacterSheet): DndActorSystem {
       PREPARED_CANTRIPS_BONUS_ID,
     ),
     cantripsTracked: true,
-    spellSlotsUsed: Array.from({ length: SPELL_LEVELS }, () => 0),
-    pactSlotsUsed: 0,
+    ...buildUsedSpellSlots(sheet),
     classCounters: buildCounters(sheet, primaryClassKey),
   };
 }

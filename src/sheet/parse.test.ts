@@ -4,6 +4,7 @@ import { hasLocalSheet, localSheet as fixture } from '@/testing/localSheet';
 
 import {
   countCounters,
+  dropNullProperties,
   isSheetFileName,
   parseSheetText,
   resolveTotalLevel,
@@ -21,7 +22,48 @@ describe('isSheetFileName', () => {
   });
 });
 
+/** Минимальный лист, который принимает схема */
+const MINIMAL_SHEET = {
+  name: 'Тест',
+  abilities: {
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10,
+  },
+};
+
+describe('dropNullProperties', () => {
+  it('убирает null-свойства на любой глубине', () => {
+    expect(
+      dropNullProperties({ a: null, b: { c: null, d: 1 }, e: [{ f: null, g: 'x' }] }),
+    ).toEqual({ b: { d: 1 }, e: [{ g: 'x' }] });
+  });
+
+  it('не трогает null-элементы массивов — это позиции', () => {
+    expect(dropNullProperties({ rows: [['1', null]] })).toEqual({
+      rows: [['1', null]],
+    });
+  });
+});
+
 describe('parseSheetText', () => {
+  it('принимает владение-ссылку без ссылки (`url: null`)', () => {
+    // Так приходят инструменты из черты «Музыкант»: из-за одного `null` лист
+    // колдуна отклонялся на `proficiencies.tools.1`.
+    const sheet = parseSheetText(
+      JSON.stringify({
+        ...MINIMAL_SHEET,
+        avatarUrl: null,
+        proficiencies: { tools: [{ name: 'Лира', url: null }] },
+      }),
+    );
+
+    expect(sheet.proficiencies?.tools).toEqual([{ name: 'Лира' }]);
+  });
+
   it.skipIf(!hasLocalSheet)('разбирает лист персонажа с сайта', () => {
     const sheet = parseSheetText(sheetText);
 

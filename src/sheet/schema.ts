@@ -75,6 +75,10 @@ const featureSchema = z
     // не должно отклонять весь лист.
     spells: z.array(z.unknown()).nullable().optional(),
     activeEffects: z.array(z.unknown()).optional(),
+    // Сделанный выбор: `choice` — строка («Убеждение»), `choiceAnswers` —
+    // ответы по ключам. Читаются в `convert/features` с проверкой формы.
+    choice: z.unknown().optional(),
+    choiceAnswers: z.unknown().optional(),
   })
   .passthrough();
 
@@ -234,6 +238,8 @@ const inventoryItemSchema = z
     requiresAttunement: z.boolean().optional(),
     attuned: z.boolean().optional(),
     passiveNote: z.string().optional(),
+    // Своё описание есть у предметов, созданных на сайте (`custom:…`)
+    description: z.array(richNodeSchema).optional(),
     bonuses: z.array(itemBonusSchema).optional(),
   })
   .passthrough();

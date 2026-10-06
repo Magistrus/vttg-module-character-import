@@ -58,6 +58,38 @@ export function isSheetFileName(fileName: string): boolean {
 }
 
 /**
+ * Убирает из объектов свойства со значением `null`.
+ *
+ * Сайт пишет `null` в смысле «значения нет» где угодно: `avatarUrl`, ссылка
+ * у владения (`{ name: 'Лира', url: null }`), подкласс, доспех у оружия,
+ * настройки. Конвертер нигде не отличает `null` от отсутствия поля, а схема,
+ * написанная под «поле может отсутствовать», отклоняла из-за одного `null`
+ * весь лист — так не разбирались листы мага и колдуна. Одно правило на входе
+ * закрывает этот класс отказов целиком, вместо `.nullable()` у каждого поля.
+ *
+ * Элементы массивов не трогаются: `null` в массиве — это позиция (ячейка
+ * таблицы, слот), и выкидывать её значило бы сдвигать соседей.
+ *
+ * @param value - разобранный JSON листа (или его часть)
+ * @returns то же значение без `null`-свойств в объектах
+ */
+export function dropNullProperties(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => dropNullProperties(entry));
+  }
+
+  if (typeof value !== 'object' || value === null) {
+    return value;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([, entry]) => entry !== null)
+      .map(([key, entry]) => [key, dropNullProperties(entry)]),
+  );
+}
+
+/**
  * Разбирает текст файла как лист персонажа.
  *
  * @param source - содержимое файла
@@ -73,7 +105,7 @@ export function parseSheetText(source: string): CharacterSheet {
     throw new Error('Файл не читается как JSON — выберите файл экспорта листа');
   }
 
-  const parsed = characterSheetSchema.safeParse(raw);
+  const parsed = characterSheetSchema.safeParse(dropNullProperties(raw));
 
   if (!parsed.success) {
     const [first] = parsed.error.issues;
