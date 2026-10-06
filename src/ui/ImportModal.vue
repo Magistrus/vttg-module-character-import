@@ -163,6 +163,27 @@
     void handleFiles(event.dataTransfer?.files ?? null);
   }
 
+  /**
+   * Запоминает настройки импорта на будущее.
+   *
+   * Настройки модуля общие на мир, и записывает их сервер только от мастера.
+   * Импортировать же может и игрок (право мира «Создание персонажей»), поэтому
+   * у игрока запись пропускается: иначе каждый его импорт оставлял бы
+   * необработанный отказ «Недостаточно прав». Сбой записи у мастера тоже не
+   * повод портить сообщение об успешном импорте — настройки лишь удобство.
+   */
+  function rememberOptions(): void {
+    if (!props.api.scene.isGM()) {
+      return;
+    }
+
+    props.api.settings
+      .set(moduleId.value, SETTINGS_KEY, { ...options.value, name: '' })
+      .catch(() => {
+        // Не сохранилось — в следующий раз мастер увидит значения по умолчанию.
+      });
+  }
+
   /** Запускает импорт с текущими настройками. */
   async function startImport(): Promise<void> {
     const parsedSheet = sheet.value;
@@ -185,10 +206,7 @@
           + `предметов — ${imported.itemCount}`,
       );
 
-      void props.api.settings.set(moduleId.value, SETTINGS_KEY, {
-        ...options.value,
-        name: '',
-      });
+      rememberOptions();
     } catch (error) {
       importError.value =
         error instanceof Error ? error.message : 'Импорт не удался';

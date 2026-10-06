@@ -213,6 +213,26 @@ const inventoryItemSchema = z
   })
   .passthrough();
 
+/**
+ * Ручная настройка лимита на листе: своё значение вместо расчётного и
+ * прибавка к расчёту. Так устроены и подготовленные заклинания, и заговоры.
+ */
+const limitSettingsSchema = z
+  .object({
+    custom: z.number().nullable().optional(),
+    bonus: z.number().optional(),
+  })
+  .passthrough();
+
+/** Настройки грузоподъёмности на листе */
+const carryingCapacitySchema = z
+  .object({
+    size: z.string().nullable().optional(),
+    custom: z.number().nullable().optional(),
+    bonus: z.number().optional(),
+  })
+  .passthrough();
+
 /** Лист персонажа целиком */
 export const characterSheetSchema = z
   .object({
@@ -224,6 +244,15 @@ export const characterSheetSchema = z
     features: z.array(featureSchema).optional(),
     spells: z.array(z.unknown()).optional(),
     spellSlots: z.array(z.unknown()).optional(),
+    spellcasting: z
+      .object({
+        prepared: limitSettingsSchema.nullable().optional(),
+        preparedCantrips: limitSettingsSchema.nullable().optional(),
+      })
+      .passthrough()
+      .nullable()
+      .optional(),
+    carryingCapacity: carryingCapacitySchema.nullable().optional(),
     characterClass: characterClassSchema.nullable().optional(),
     additionalClasses: z.array(characterClassSchema).optional(),
     characterBackground: backgroundSchema.nullable().optional(),

@@ -253,6 +253,42 @@ export interface DndBackgroundEntry {
   grantedFeatName?: string;
 }
 
+/**
+ * Прибавка к лимиту подготовленных заклинаний (или заговоров). Система хранит
+ * их списком, чтобы у каждой был свой источник; лист сайта даёт одно число,
+ * поэтому из листа получается не больше одной записи.
+ */
+export interface DndLimitBonus {
+  /** Идентификатор записи */
+  id: string;
+  /** Вид прибавки: плоское число */
+  kind: 'flat';
+  /** Характеристика (для плоской прибавки система её не читает) */
+  ability: DndAbility;
+  /** Величина прибавки */
+  value: number;
+  /** Подпись источника на листе */
+  label: string;
+}
+
+/** Ручная настройка лимита подготовленных заклинаний или заговоров */
+export interface DndPreparedLimit {
+  /** Своё значение вместо расчётного (null — считать по классу) */
+  custom: number | null;
+  /** Прибавки к расчётному значению */
+  bonuses: DndLimitBonus[];
+}
+
+/** Настройки грузоподъёмности */
+export interface DndCarryingCapacity {
+  /** Размер для расчёта (null — размер существа) */
+  size: DndCreatureSize | null;
+  /** Своё значение вместо расчётного (null — считать по Силе) */
+  custom: number | null;
+  /** Прибавка к расчётному значению */
+  bonus: number;
+}
+
 /** Состояние счётчика ресурса на актёре */
 export interface DndCounterState {
   /** Ключ счётчика */
@@ -428,6 +464,14 @@ export type DndActorSystem = {
   proficiencies: DndProficiencies;
   /** Деньги */
   currency: DndCurrency;
+  /** Настройки грузоподъёмности */
+  carryingCapacity: DndCarryingCapacity;
+  /** Настройка лимита подготовленных заклинаний */
+  preparedSpells: DndPreparedLimit;
+  /** Настройка лимита заговоров */
+  preparedCantrips: DndPreparedLimit;
+  /** Считать ли заговоры против лимита (так ведёт себя новый актёр системы) */
+  cantripsTracked: boolean;
   /** Потраченные ячейки заклинаний (индекс 0 — 1-й круг) */
   spellSlotsUsed: number[];
   /** Потраченные ячейки договора (колдун) */

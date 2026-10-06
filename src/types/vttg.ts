@@ -19,6 +19,8 @@ export interface VttgTokenSettings {
   frameUrl?: string;
   /** Показывать ли имя токена на сцене */
   showName?: boolean;
+  /** Отношение фишки по умолчанию */
+  disposition?: 'friendly' | 'neutral' | 'hostile';
   /** Зрение токена */
   vision?: {
     /** Включено ли зрение */

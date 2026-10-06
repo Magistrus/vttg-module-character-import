@@ -54,6 +54,16 @@ const SIZE_BY_LABEL: Record<string, DndCreatureSize> = {
   'Громадный': 'gargantuan',
 };
 
+/** Ключи размеров системы — для проверки значений, пришедших уже ключом */
+const SIZE_KEYS: ReadonlySet<string> = new Set<DndCreatureSize>([
+  'tiny',
+  'small',
+  'medium',
+  'large',
+  'huge',
+  'gargantuan',
+]);
+
 /** Ключи характеристик системы — для проверки значений листа */
 const ABILITY_KEYS: ReadonlySet<string> = new Set<DndAbility>([
   'strength',
@@ -164,6 +174,38 @@ export function sizeByLabel(label: string | null | undefined): DndCreatureSize {
   }
 
   return SIZE_BY_LABEL[label.trim()] ?? 'medium';
+}
+
+/**
+ * Опознаёт размер существа там, где «не знаю» — законный ответ.
+ *
+ * В отличие от {@link sizeByLabel} не подставляет средний размер: для
+ * настройки грузоподъёмности незнакомый размер означает «считать по размеру
+ * существа», а молча записанный «средний» переопределил бы его.
+ *
+ * @param value - ключ размера системы (`medium`) или русская подпись листа
+ * @returns ключ размера или null, если размер не задан или незнаком
+ */
+export function toCreatureSizeOrNull(
+  value: string | null | undefined,
+): DndCreatureSize | null {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+
+  return isCreatureSize(trimmed) ? trimmed : SIZE_BY_LABEL[trimmed] ?? null;
+}
+
+/**
+ * Проверяет, что строка — ключ размера существа системы.
+ *
+ * @param value - произвольная строка
+ * @returns true, если это размер системы
+ */
+function isCreatureSize(value: string): value is DndCreatureSize {
+  return SIZE_KEYS.has(value);
 }
 
 /**

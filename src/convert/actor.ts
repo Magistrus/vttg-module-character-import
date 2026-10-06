@@ -25,6 +25,7 @@ import { buildCounters } from './counters';
 import { buildFeatures } from './features';
 import { buildInventory, collectUnmappedBonusItems } from './inventory';
 import { CURRENCY_BY_COIN, isAbilityKey, sizeByLabel } from './keys';
+import { buildCarryingCapacity, buildPreparedLimit } from './limits';
 import { buildProficiencies } from './proficiencies';
 
 /** Базовый КД без доспеха */
@@ -32,6 +33,18 @@ const DEFAULT_ARMOR_CLASS = 10;
 
 /** Количество кругов заклинаний в D&D 5e */
 const SPELL_LEVELS = 9;
+
+/** ID прибавки к лимиту подготовленных заклинаний, перенесённой с листа */
+const PREPARED_SPELLS_BONUS_ID = 'sheet-prepared-spells';
+
+/** ID прибавки к лимиту заговоров, перенесённой с листа */
+const PREPARED_CANTRIPS_BONUS_ID = 'sheet-prepared-cantrips';
+
+/**
+ * Отношение фишки импортированного персонажа. Лист сайта — это всегда персонаж
+ * игрока, а новый актёр системы получает именно «дружелюбный».
+ */
+const PLAYER_CHARACTER_DISPOSITION = 'friendly';
 
 /** Единица расстояния листа → единица системы */
 const DISTANCE_UNITS: Record<string, DndMovement['units']> = {
@@ -288,6 +301,16 @@ function buildActorSystem(sheet: CharacterSheet): DndActorSystem {
     initiativeAbility: resolveInitiativeAbility(sheet),
     proficiencies: buildProficiencies(sheet),
     currency: buildCurrency(sheet),
+    carryingCapacity: buildCarryingCapacity(sheet),
+    preparedSpells: buildPreparedLimit(
+      sheet.spellcasting?.prepared,
+      PREPARED_SPELLS_BONUS_ID,
+    ),
+    preparedCantrips: buildPreparedLimit(
+      sheet.spellcasting?.preparedCantrips,
+      PREPARED_CANTRIPS_BONUS_ID,
+    ),
+    cantripsTracked: true,
     spellSlotsUsed: Array.from({ length: SPELL_LEVELS }, () => 0),
     pactSlotsUsed: 0,
     classCounters: buildCounters(sheet, primaryClassKey),
@@ -315,6 +338,7 @@ function buildToken(
 
   return {
     showName: false,
+    disposition: PLAYER_CHARACTER_DISPOSITION,
     ...(avatar ? { imageUrl: avatar } : {}),
     vision: {
       enabled: true,

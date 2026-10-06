@@ -4,6 +4,7 @@ import {
   isAbilityKey,
   sizeByLabel,
   skillKeyByLabel,
+  toCreatureSizeOrNull,
   toDamageType,
   toProficiencyLevel,
   urlToKey,
@@ -62,6 +63,13 @@ describe('вспомогательные словари', () => {
     expect(sizeByLabel('Средний')).toBe('medium');
     expect(sizeByLabel('Маленький')).toBe('small');
     expect(sizeByLabel(null)).toBe('medium');
+  });
+
+  it('опознаёт размер и ключом, и подписью, а незнакомый не подменяет', () => {
+    expect(toCreatureSizeOrNull('large')).toBe('large');
+    expect(toCreatureSizeOrNull('Большой')).toBe('large');
+    expect(toCreatureSizeOrNull('Колоссальный')).toBeNull();
+    expect(toCreatureSizeOrNull(null)).toBeNull();
   });
 
   it('проверяет ключ характеристики', () => {

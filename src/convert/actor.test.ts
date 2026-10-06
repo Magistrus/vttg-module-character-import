@@ -182,6 +182,63 @@ describe('buildActorDraft — системные данные', () => {
     expect(system.currency).toEqual({ cp: 0, sp: 0, ep: 0, gp: 18, pp: 0 });
   });
 
+  it('заполняет поля, которые новый актёр системы получает по умолчанию', () => {
+    expect(system.carryingCapacity).toEqual({ size: null, custom: null, bonus: 0 });
+    expect(system.preparedSpells).toEqual({ custom: null, bonuses: [] });
+    expect(system.preparedCantrips).toEqual({ custom: null, bonuses: [] });
+    expect(system.cantripsTracked).toBe(true);
+    expect(actor.token?.disposition).toBe('friendly');
+  });
+
+  it('переводит число-прибавку листа в запись прибавки системы', () => {
+    const tuned = parseSheetText(
+      JSON.stringify({
+        ...fixture,
+        spellcasting: {
+          prepared: { custom: null, bonus: 2 },
+          preparedCantrips: { custom: 4, bonus: 0 },
+        },
+        carryingCapacity: { size: 'Большой', custom: null, bonus: 30 },
+      }),
+    );
+
+    const tunedSystem = buildActorDraft(tuned, fullOptions, null).actor.system;
+
+    expect(tunedSystem.preparedSpells).toEqual({
+      custom: null,
+      bonuses: [
+        {
+          id: 'sheet-prepared-spells',
+          kind: 'flat',
+          ability: 'strength',
+          value: 2,
+          label: 'С листа TTG Club',
+        },
+      ],
+    });
+
+    expect(tunedSystem.preparedCantrips).toEqual({ custom: 4, bonuses: [] });
+
+    expect(tunedSystem.carryingCapacity).toEqual({
+      size: 'large',
+      custom: null,
+      bonus: 30,
+    });
+  });
+
+  it('не подставляет средний размер в грузоподъёмность, если размер незнаком', () => {
+    const odd = parseSheetText(
+      JSON.stringify({
+        ...fixture,
+        carryingCapacity: { size: 'Колоссальный', custom: null, bonus: 0 },
+      }),
+    );
+
+    expect(
+      buildActorDraft(odd, fullOptions, null).actor.system.carryingCapacity.size,
+    ).toBeNull();
+  });
+
   it('переносит счётчики ресурсов на основной класс', () => {
     expect(system.classCounters).toEqual([
       {
