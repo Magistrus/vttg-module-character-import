@@ -38,6 +38,31 @@ const fullOptions: ImportOptions = {
   isPublic: false,
 };
 
+describe('токен', () => {
+  it('ставит ту же рамку, что система даёт новому персонажу', () => {
+    const sheet = parseSheetText(JSON.stringify(MINIMAL_SHEET));
+    const { token } = buildActorDraft(sheet, fullOptions, null).actor;
+
+    expect(token?.frameUrl).toBe('assets/token-frames/0.png');
+    expect(token?.imageUrl).toBeUndefined();
+  });
+
+  it('кладёт портрет с листа в картинку токена, рамку не теряет', () => {
+    const sheet = parseSheetText(
+      JSON.stringify({ ...MINIMAL_SHEET, avatarUrl: 'https://ttg.club/media/a.png' }),
+    );
+
+    const { token } = buildActorDraft(sheet, fullOptions, null).actor;
+
+    expect(token).toEqual(
+      expect.objectContaining({
+        frameUrl: 'assets/token-frames/0.png',
+        imageUrl: 'https://ttg.club/media/a.png',
+      }),
+    );
+  });
+});
+
 describe('потраченные ячейки заклинаний', () => {
   it('разносит ячейки договора и обычные по своим полям', () => {
     const sheet = parseSheetText(

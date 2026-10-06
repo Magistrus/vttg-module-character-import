@@ -50,6 +50,14 @@ const PREPARED_CANTRIPS_BONUS_ID = 'sheet-prepared-cantrips';
  */
 const PLAYER_CHARACTER_DISPOSITION = 'friendly';
 
+/**
+ * Рамка токена нового персонажа — та же, что ставит система `dnd5e-2024`
+ * своему новому актёру (`DEFAULT_ACTOR.token.frameUrl`). Модуль собирает
+ * `token` целиком сам, поэтому без этой строки рамка терялась, и у
+ * импортированного персонажа путь к картинке токена оставался пустым.
+ */
+const DEFAULT_TOKEN_FRAME_URL = 'assets/token-frames/0.png';
+
 /** Единица расстояния листа → единица системы */
 const DISTANCE_UNITS: Record<string, DndMovement['units']> = {
   feet: 'ft',
@@ -377,6 +385,7 @@ function buildToken(
   const normal = Number(vision.normal ?? 0);
 
   return {
+    frameUrl: DEFAULT_TOKEN_FRAME_URL,
     showName: false,
     disposition: PLAYER_CHARACTER_DISPOSITION,
     ...(avatar ? { imageUrl: avatar } : {}),

@@ -1,6 +1,6 @@
 {
   "name": "vttg-module-character-import",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Импорт персонажей с листа TTG Club (JSON) в Virtual TTG",
   "type": "module",
   "private": true,
