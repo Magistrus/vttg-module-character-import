@@ -8,6 +8,7 @@ import type { CharacterSheet } from './schema';
 
 import { counterKeyFromId } from './counterKey';
 import { characterSheetSchema } from './schema';
+import { collectSheetSpells } from './spells';
 
 /** Расширения, которые модуль принимает как лист персонажа */
 export const SHEET_EXTENSIONS = ['.json'];
@@ -179,7 +180,7 @@ export function summarizeSheet(sheet: CharacterSheet): SheetSummary {
     hitPointsMax: sheet.health?.max ?? 0,
     featureCount: sheet.features?.length ?? 0,
     itemCount: sheet.inventory?.length ?? 0,
-    spellCount: sheet.spells?.length ?? 0,
+    spellCount: collectSheetSpells(sheet, resolveTotalLevel(sheet)).length,
     counterCount: countCounters(sheet),
     languageCount: sheet.proficiencies?.languages?.length ?? 0,
     exhaustion: sheet.health?.exhaustion ?? 0,

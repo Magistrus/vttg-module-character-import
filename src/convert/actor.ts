@@ -20,6 +20,9 @@ import type {
 } from '@/types/dnd5e';
 import type { VttgActorCreateInput } from '@/types/vttg';
 
+import { resolveTotalLevel } from '@/sheet/parse';
+import { collectSheetSpells } from '@/sheet/spells';
+
 import { buildBackground, buildClasses, buildSpecies } from './classes';
 import { buildCounters } from './counters';
 import { buildFeatures } from './features';
@@ -228,12 +231,25 @@ function resolveInitiativeAbility(
 export function collectWarnings(sheet: CharacterSheet): string[] {
   const warnings: string[] = [];
 
-  const spellCount = sheet.spells?.length ?? 0;
+  const spells = collectSheetSpells(sheet, resolveTotalLevel(sheet));
 
-  if (spellCount > 0) {
+  if (spells.length > 0) {
     warnings.push(
-      `Заклинания (${spellCount}) не переносятся: их механику задаёт компендиум мира — `
-        + 'добавьте их персонажу из компендиума после импорта.',
+      `Заклинания (${spells.length}) не переносятся: их механику задаёт компендиум `
+        + 'мира, а лист несёт только названия — добавьте их персонажу из '
+        + `компендиума после импорта: ${spells.map((spell) => spell.name).join(', ')}.`,
+    );
+  }
+
+  const featuresWithEffects = (sheet.features ?? []).filter(
+    (feature) => (feature.activeEffects?.length ?? 0) > 0,
+  );
+
+  if (featuresWithEffects.length > 0) {
+    warnings.push(
+      'Эффекты черт не переносятся автоматически — описание черты перенесено, '
+        + 'а сам эффект наложите на листе: '
+        + `${featuresWithEffects.map((feature) => feature.name).join(', ')}.`,
     );
   }
 

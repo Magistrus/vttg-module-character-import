@@ -44,6 +44,76 @@ interface RichNode {
   attrs?: Record<string, unknown>;
   /** Дети узла */
   content?: unknown[];
+  /** Строки таблицы (для `type: 'table'`): ячейки — строки с разметкой сайта */
+  rows?: unknown;
+  /** Подписи столбцов таблицы */
+  colLabels?: unknown;
+  /** Название таблицы */
+  caption?: unknown;
+}
+
+/**
+ * Готовит содержимое ячейки таблицы: разметка сайта разворачивается, а то,
+ * что ломает строку markdown-таблицы (вертикальная черта, перенос), гасится.
+ *
+ * @param cell - ячейка с листа
+ * @returns текст ячейки в одну строку
+ */
+function renderTableCell(cell: unknown): string {
+  return renderInline(cell)
+    .replace(/\|/g, '\\|')
+    .replace(/\s*\n\s*/g, ' ')
+    .trim();
+}
+
+/**
+ * Собирает таблицу листа в markdown-таблицу.
+ *
+ * Таблица на листе — не узел с `content`, а отдельная форма: строки ячеек
+ * (`rows`), подписи столбцов (`colLabels`) и название (`caption`). Без своей
+ * отрисовки она пропадала из описания целиком — так терялся, например, список
+ * «Заклинания Метки письма». Если подписей столбцов нет, заголовком
+ * markdown-таблицы становится первая строка (без заголовка таблицы в markdown
+ * не бывает).
+ *
+ * @param node - узел таблицы
+ * @returns блоки: название (если есть) и сама таблица
+ */
+function renderTable(node: RichNode): string[] {
+  const rows = (Array.isArray(node.rows) ? node.rows : [])
+    .filter((row): row is unknown[] => Array.isArray(row))
+    .map((row) => row.map((cell) => renderTableCell(cell)));
+
+  const labels = Array.isArray(node.colLabels)
+    ? node.colLabels.map((label) => renderTableCell(label))
+    : [];
+
+  const [header = labels, ...body] = labels.length > 0 ? [labels, ...rows] : rows;
+
+  if (header.length === 0) {
+    return [];
+  }
+
+  const width = Math.max(header.length, ...body.map((row) => row.length));
+
+  /**
+   * Собирает строку таблицы нужной ширины.
+   *
+   * @param cells - ячейки строки
+   * @returns строка markdown-таблицы
+   */
+  const toLine = (cells: readonly string[]): string =>
+    `| ${Array.from({ length: width }, (_unused, index) => cells[index] ?? '').join(' | ')} |`;
+
+  const table = [
+    toLine(header),
+    toLine(Array.from({ length: width }, () => '---')),
+    ...body.map((row) => toLine(row)),
+  ].join('\n');
+
+  const caption = typeof node.caption === 'string' ? renderInline(node.caption).trim() : '';
+
+  return caption ? [`**${caption}**`, table] : [table];
 }
 
 /**
@@ -199,6 +269,9 @@ function renderBlocks(node: unknown): string[] {
 
       return items.length > 0 ? [items.join('\n')] : [];
     }
+
+    case 'table':
+      return renderTable(node);
 
     case 'quote':
     case 'blockquote': {

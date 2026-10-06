@@ -67,6 +67,40 @@ describe('richTextToMarkdown', () => {
     expect(richTextToMarkdown(description)).toBe('> #### Совет\n\n> **Вопрос?**');
   });
 
+  it('собирает таблицу листа в markdown-таблицу с названием', () => {
+    const description = [
+      {
+        type: 'table',
+        caption: 'Заклинания Метки письма',
+        colLabels: ['Уровень', 'Заклинания'],
+        rows: [
+          ['1', '{@spell Приказ [Command]|url:command-phb}'],
+          ['5', '{@spell Сновидение [Dream]|url:dream-phb}'],
+        ],
+      },
+    ];
+
+    expect(richTextToMarkdown(description)).toBe(
+      '**Заклинания Метки письма**\n\n'
+        + '| Уровень | Заклинания |\n'
+        + '| --- | --- |\n'
+        + '| 1 | Приказ [Command] |\n'
+        + '| 5 | Сновидение [Dream] |',
+    );
+  });
+
+  it('делает заголовком первую строку, если подписей столбцов нет', () => {
+    expect(
+      richTextToMarkdown([{ type: 'table', rows: [['А', 'Б'], ['1', '2']] }]),
+    ).toBe('| А | Б |\n| --- | --- |\n| 1 | 2 |');
+  });
+
+  it('не даёт вертикальной черте в ячейке сломать таблицу', () => {
+    expect(
+      richTextToMarkdown([{ type: 'table', colLabels: ['Ключ'], rows: [['a|b']] }]),
+    ).toBe('| Ключ |\n| --- |\n| a\\|b |');
+  });
+
   it('возвращает пустую строку для пустого описания', () => {
     expect(richTextToMarkdown(undefined)).toBe('');
     expect(richTextToMarkdown([])).toBe('');

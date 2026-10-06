@@ -62,12 +62,31 @@ export function buildSavingThrowProficiencies(
   return abilities;
 }
 
+/** Владение на листе: строка или ссылка на справочник `{ name, url }` */
+type SheetProficiencyEntry = string | { name: string };
+
+/**
+ * Сводит владения листа к названиям.
+ *
+ * Система хранит владения человекочитаемыми строками («Всё простое оружие»,
+ * «Инструменты каллиграфа»), а лист отдаёт их то строкой, то ссылкой на
+ * справочник. От ссылки остаётся название — ссылку на сайт в мире некуда вести.
+ *
+ * @param entries - владения с листа
+ * @returns названия владений без пустых и повторов
+ */
+function toProficiencyNames(
+  entries: readonly SheetProficiencyEntry[] | undefined,
+): string[] {
+  const names = (entries ?? [])
+    .map((entry) => (typeof entry === 'string' ? entry : entry.name).trim())
+    .filter((name) => name.length > 0);
+
+  return [...new Set(names)];
+}
+
 /**
  * Собирает владения персонажа целиком.
- *
- * Доспехи, оружие, инструменты и языки лист хранит человекочитаемыми
- * строками («Всё простое оружие») — система хранит их так же, поэтому
- * переносим как есть.
  *
  * @param sheet - лист персонажа
  * @returns владения для `system.proficiencies`
@@ -76,11 +95,11 @@ export function buildProficiencies(sheet: CharacterSheet): DndProficiencies {
   const source = sheet.proficiencies;
 
   return {
-    armor: [...(source?.armor ?? [])],
-    weapons: [...(source?.weapons ?? [])],
-    weaponMasteries: [...(source?.weaponMasteries ?? [])],
-    tools: [...(source?.tools ?? [])],
-    languages: [...(source?.languages ?? [])],
+    armor: toProficiencyNames(source?.armor),
+    weapons: toProficiencyNames(source?.weapons),
+    weaponMasteries: toProficiencyNames(source?.weaponMasteries),
+    tools: toProficiencyNames(source?.tools),
+    languages: toProficiencyNames(source?.languages),
     savingThrows: buildSavingThrowProficiencies(sheet),
     skills: buildSkillProficiencies(sheet),
   };

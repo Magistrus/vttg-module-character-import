@@ -29,6 +29,17 @@ const richObjectSchema = z
   })
   .passthrough();
 
+/**
+ * Одно владение на листе. Обычно это строка («Всё простое оружие»), но сайт
+ * отдаёт и ссылку на справочник — `{ name, url }` (так приходят инструменты:
+ * «Инструменты каллиграфа» со ссылкой на предмет). Принимаем обе формы:
+ * строгая схема на одну из них отклоняла бы весь лист целиком.
+ */
+const proficiencyEntrySchema = z.union([
+  z.string(),
+  z.object({ name: z.string(), url: z.string().optional() }).passthrough(),
+]);
+
 /** Значения характеристик листа */
 const abilitiesSchema = z.object({
   strength: z.number(),
@@ -60,6 +71,10 @@ const featureSchema = z
     originName: z.string().optional(),
     level: z.number().nullable().optional(),
     counters: z.array(featureCounterSchema).optional(),
+    // Форму элементов разбирает `sheet/spells`: одно непонятное заклинание
+    // не должно отклонять весь лист.
+    spells: z.array(z.unknown()).nullable().optional(),
+    activeEffects: z.array(z.unknown()).optional(),
   })
   .passthrough();
 
@@ -84,6 +99,16 @@ const speciesSchema = z
     name: z.string().optional(),
     lineageUrl: z.string().nullable().optional(),
     lineageName: z.string().nullable().optional(),
+    innateSpells: z
+      .array(
+        z
+          .object({
+            spell: z.unknown(),
+            requiredLevel: z.number().optional(),
+          })
+          .passthrough(),
+      )
+      .optional(),
   })
   .passthrough();
 
@@ -310,11 +335,11 @@ export const characterSheetSchema = z
     classResources: z.array(classResourceSchema).optional(),
     proficiencies: z
       .object({
-        armor: z.array(z.string()).optional(),
-        weapons: z.array(z.string()).optional(),
-        weaponMasteries: z.array(z.string()).optional(),
-        tools: z.array(z.string()).optional(),
-        languages: z.array(z.string()).optional(),
+        armor: z.array(proficiencyEntrySchema).optional(),
+        weapons: z.array(proficiencyEntrySchema).optional(),
+        weaponMasteries: z.array(proficiencyEntrySchema).optional(),
+        tools: z.array(proficiencyEntrySchema).optional(),
+        languages: z.array(proficiencyEntrySchema).optional(),
       })
       .passthrough()
       .nullable()
