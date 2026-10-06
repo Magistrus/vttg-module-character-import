@@ -77,6 +77,40 @@ export interface VttgActorsApi {
   update: (actorId: string, patch: Record<string, unknown>) => void;
 }
 
+/** Секция чтения компендиума (хост 0.9.6xx+) */
+export interface VttgCompendiumApi {
+  /** Записи компендиума одного вида по всем пакам */
+  getEntries: (dataKind: string) => Promise<ReadonlyArray<unknown>>;
+}
+
+/** Черновик записи «Мастерской» */
+export interface VttgItemCreateInput {
+  /** Название */
+  name: string;
+  /** Тип записи (`spell`) */
+  type: string;
+  /** Системные и обобщённые поля записи */
+  [key: string]: unknown;
+}
+
+/** Созданная запись «Мастерской» (опознавательные поля) */
+export interface VttgCreatedItem {
+  /** ID, который назначил сервер */
+  id: string;
+  /** Название */
+  name: string;
+  /** Тип */
+  type: string;
+}
+
+/** Секция «Мастерской» (хост 0.9.6xx+) */
+export interface VttgItemsApi {
+  /** Все записи «Мастерской» мира */
+  list: () => Promise<ReadonlyArray<unknown>>;
+  /** Создаёт запись и ждёт ответа сервера; 🔒 `item-write` */
+  create: (input: VttgItemCreateInput) => Promise<VttgCreatedItem>;
+}
+
 /** Часть `ClientModuleAPI`, которой пользуется модуль. */
 export interface VttgModuleApi {
   /**
@@ -88,6 +122,18 @@ export interface VttgModuleApi {
    * секции сам и объясняет пользователю, что делать.
    */
   actors?: VttgActorsApi;
+
+  /**
+   * Компендиум: чтение. Необязательна по той же причине, что и `actors`: в
+   * приложении без неё заклинания не переносятся, но импорт остального идёт.
+   */
+  compendium?: VttgCompendiumApi;
+
+  /**
+   * «Мастерская»: чтение и создание записей. Без неё заклинание, которого нет
+   * в компендиуме, завести негде — оно остаётся в предупреждениях.
+   */
+  items?: VttgItemsApi;
 
   /**
    * Файлы мира.

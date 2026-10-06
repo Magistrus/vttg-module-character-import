@@ -41,7 +41,7 @@ const fullOptions: ImportOptions = {
 describe('токен', () => {
   it('ставит ту же рамку, что система даёт новому персонажу', () => {
     const sheet = parseSheetText(JSON.stringify(MINIMAL_SHEET));
-    const { token } = buildActorDraft(sheet, fullOptions, null).actor;
+    const { token } = buildActorDraft(sheet, fullOptions).actor;
 
     expect(token?.frameUrl).toBe('assets/token-frames/0.png');
     expect(token?.imageUrl).toBeUndefined();
@@ -52,7 +52,7 @@ describe('токен', () => {
       JSON.stringify({ ...MINIMAL_SHEET, avatarUrl: 'https://ttg.club/media/a.png' }),
     );
 
-    const { token } = buildActorDraft(sheet, fullOptions, null).actor;
+    const { token } = buildActorDraft(sheet, fullOptions).actor;
 
     expect(token).toEqual(
       expect.objectContaining({
@@ -99,7 +99,7 @@ describe('потраченные ячейки заклинаний', () => {
       }),
     );
 
-    expect(buildActorDraft(sheet, fullOptions, null).actor.system.pactSlotsUsed).toBe(1);
+    expect(buildActorDraft(sheet, fullOptions).actor.system.pactSlotsUsed).toBe(1);
   });
 });
 
@@ -169,7 +169,7 @@ describe('свой предмет с сайта', () => {
 });
 
 describe('свои заклинания с сайта', () => {
-  it('предупреждает о них отдельно: в компендиуме их нет', () => {
+  it('предупреждает о них отдельно: искать их по названию', () => {
     const sheet = parseSheetText(
       JSON.stringify({
         ...MINIMAL_SHEET,
@@ -184,7 +184,7 @@ describe('свои заклинания с сайта', () => {
 
     expect(warnings).toContainEqual(expect.stringContaining('Заклинания (1)'));
     expect(warnings).toContainEqual(
-      expect.stringMatching(/^Свои заклинания с сайта \(1\).*Жуткий смех Таши/),
+      expect.stringMatching(/^Заклинания-копии с сайта \(1\).*Жуткий смех Таши/),
     );
   });
 });

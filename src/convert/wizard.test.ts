@@ -36,7 +36,7 @@ describe.skipIf(!wizard.available)('лист заклинателя', () => {
   });
 
   it('переносит владение инструментом названием', () => {
-    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions, null);
+    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions);
 
     expect(actor.system.proficiencies.tools).toEqual(['Инструменты каллиграфа']);
   });
@@ -50,8 +50,7 @@ describe.skipIf(!wizard.available)('лист заклинателя', () => {
   it('называет непереносимые заклинания поимённо', () => {
     const { warnings } = buildActorDraft(
       parseSheetText(sheetText),
-      fullOptions,
-      null,
+      fullOptions
     );
 
     const spellWarning = warnings.find((text) => text.startsWith('Заклинания (12)'));
@@ -64,15 +63,14 @@ describe.skipIf(!wizard.available)('лист заклинателя', () => {
   it('предупреждает об эффекте черты, который не переносится', () => {
     const { warnings } = buildActorDraft(
       parseSheetText(sheetText),
-      fullOptions,
-      null,
+      fullOptions
     );
 
     expect(warnings.some((text) => text.includes('Наследие фей'))).toBe(true);
   });
 
   it('сохраняет таблицу в описании черты', () => {
-    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions, null);
+    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions);
     const scribing = actor.features.find((entry) => entry.name === 'Метка письма');
 
     expect(scribing?.description).toContain('**Заклинания Метки письма**');
@@ -83,7 +81,7 @@ describe.skipIf(!wizard.available)('лист заклинателя', () => {
   });
 
   it('собирает класс волшебника с костью к6 и полным заклинателем', () => {
-    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions, null);
+    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions);
 
     expect(actor.system.classes).toEqual([
       expect.objectContaining({

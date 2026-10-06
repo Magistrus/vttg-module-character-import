@@ -35,20 +35,20 @@ describe.skipIf(!warlock.available)('лист колдуна', () => {
   });
 
   it('переносит инструменты названиями', () => {
-    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions, null);
+    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions);
 
     expect(actor.system.proficiencies.tools).toEqual(['Флейта', 'Лира', 'Барабан']);
   });
 
   it('сохраняет потраченную ячейку договора', () => {
-    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions, null);
+    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions);
 
     expect(actor.system.pactSlotsUsed).toBe(1);
     expect(actor.system.spellSlotsUsed.every((used) => used === 0)).toBe(true);
   });
 
   it('собирает класс колдуна с договорной магией', () => {
-    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions, null);
+    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions);
 
     expect(actor.system.classes).toEqual([
       expect.objectContaining({ classKey: 'warlock', hitDie: 8, casterType: 'pact' }),
@@ -57,24 +57,24 @@ describe.skipIf(!warlock.available)('лист колдуна', () => {
 
   it('видит все 7 заклинаний и делит их на книжные и свои', () => {
     const sheet = parseSheetText(sheetText);
-    const { warnings } = buildActorDraft(sheet, fullOptions, null);
+    const { warnings } = buildActorDraft(sheet, fullOptions);
 
     expect(summarizeSheet(sheet).spellCount).toBe(7);
     expect(warnings).toContainEqual(expect.stringContaining('Заклинания (5)'));
     expect(warnings).toContainEqual(
-      expect.stringMatching(/^Свои заклинания с сайта \(2\)/),
+      expect.stringMatching(/^Заклинания-копии с сайта \(2\)/),
     );
   });
 
   it('дописывает сделанный выбор к черте вида', () => {
-    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions, null);
+    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions);
     const skilled = actor.features.find((entry) => entry.name === 'Умелость');
 
     expect(skilled?.description).toContain('**Выбрано:** Убеждение');
   });
 
   it('переносит описание своего доспеха', () => {
-    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions, null);
+    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions);
     const armor = actor.equipment.find((entry) => entry.name === 'Кожаный доспех');
 
     expect(armor?.description).toContain('**КД:** 11 + модификатор Ловкости.');
@@ -82,7 +82,7 @@ describe.skipIf(!warlock.available)('лист колдуна', () => {
   });
 
   it('переносит вдохновение', () => {
-    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions, null);
+    const { actor } = buildActorDraft(parseSheetText(sheetText), fullOptions);
 
     expect(actor.system.inspiration).toBe(true);
   });

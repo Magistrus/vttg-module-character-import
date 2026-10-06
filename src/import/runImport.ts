@@ -15,6 +15,7 @@ import type { VttgModuleApi } from '@/types/vttg';
 import { buildActorDraft } from '@/convert/actor';
 
 import { importAvatar } from './avatar';
+import { importSpells } from './spells';
 
 /** Система мира, для которой собирается актёр */
 export const TARGET_SYSTEM_ID = 'dnd5e-2024';
@@ -45,6 +46,8 @@ export interface ImportResult {
   featureCount: number;
   /** Сколько предметов перенесено */
   itemCount: number;
+  /** Сколько заклинаний легло на лист */
+  spellCount: number;
   /** Что не поехало вместе с листом */
   warnings: string[];
 }
@@ -74,12 +77,16 @@ export async function runImport(
   const actorName = options.name.trim() || sheet.name;
   const avatar = await importAvatar(api, sheet.avatarUrl, actorName);
 
-  const { actor, warnings } = buildActorDraft(
-    sheet,
-    options,
+  // Заклинания — до актёра: недостающие заводятся в «Мастерской», и на лист
+  // ложатся уже готовые записи. Если актёра потом не примут, заведённые
+  // заклинания останутся в мире и следующий импорт найдёт их, а не продублирует.
+  const spellImport = await importSpells(api, sheet);
+
+  const { actor, warnings } = buildActorDraft(sheet, options, {
     ownerId,
-    avatar.path,
-  );
+    avatar: avatar.path,
+    ...(spellImport ? { spellImport } : {}),
+  });
 
   const created = await actors.create(actor);
 
@@ -88,6 +95,7 @@ export async function runImport(
     actorName: created.name,
     featureCount: actor.features.length,
     itemCount: actor.equipment.length,
+    spellCount: actor.spells.length,
     warnings: avatar.warning ? [...warnings, avatar.warning] : warnings,
   };
 }

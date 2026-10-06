@@ -1,8 +1,8 @@
 {
   "id": "character-import",
   "name": "Импорт персонажей",
-  "version": "0.2.4",
-  "description": "Импорт персонажа с листа TTG Club (экспорт JSON): характеристики, класс, вид, предыстория, владения, черты, инвентарь и счётчики — одним актёром мира.",
+  "version": "0.3.0",
+  "description": "Импорт персонажа с листа TTG Club (экспорт JSON): характеристики, класс, вид, предыстория, владения, черты, инвентарь, счётчики и заклинания — одним актёром мира.",
   "icon": "tabler:user-plus",
   "author": "TTG Club",
   "language": "ru",
@@ -17,6 +17,7 @@
   "permissions": [
     "actor-write",
     "assets",
+    "item-write",
     "modals",
     "notifications",
     "settings"

@@ -21,6 +21,7 @@
     runImport,
     TARGET_SYSTEM_ID,
   } from '@/import/runImport';
+  import { isSpellTransferSupported } from '@/import/spells';
   import { isSheetFileName, parseSheetFile, summarizeSheet } from '@/sheet/parse';
 
   const props = defineProps<{
@@ -66,8 +67,17 @@
   const isHostSupported = computed(() => isActorWriteSupported(props.api));
 
   /** Что лист несёт, а импорт не переносит */
+  /**
+   * Что лист несёт, а импорт не переносит. Про заклинания — по возможностям
+   * приложения: умеет оно отдавать компендиум — заклинания перенесутся.
+   */
   const warnings = computed(() =>
-    sheet.value ? collectWarnings(sheet.value) : [],
+    sheet.value
+      ? collectWarnings(
+          sheet.value,
+          isSpellTransferSupported(props.api) ? 'pending' : 'unsupported',
+        )
+      : [],
   );
 
   const canImport = computed(
@@ -203,7 +213,8 @@
       props.api.notifications.success(
         'Персонаж импортирован',
         `${imported.actorName}: черт — ${imported.featureCount}, `
-          + `предметов — ${imported.itemCount}`,
+          + `предметов — ${imported.itemCount}, `
+          + `заклинаний — ${imported.spellCount}`,
       );
 
       rememberOptions();
@@ -410,7 +421,8 @@
       class="ci-alert ci-alert--success"
     >
       Персонаж «{{ result.actorName }}» создан: черт — {{ result.featureCount }},
-      предметов — {{ result.itemCount }}. Он уже в списке персонажей мира.
+      предметов — {{ result.itemCount }}, заклинаний — {{ result.spellCount }}.
+      Он уже в списке персонажей мира.
 
       <ul
         v-if="result.warnings.length > 0"

@@ -289,6 +289,103 @@ export interface DndCarryingCapacity {
   bonus: number;
 }
 
+/** Школа магии */
+export type DndSpellSchool =
+  | 'abjuration'
+  | 'conjuration'
+  | 'divination'
+  | 'enchantment'
+  | 'evocation'
+  | 'illusion'
+  | 'necromancy'
+  | 'transmutation';
+
+/** Единица времени сотворения */
+export type DndCastingTimeUnit =
+  | 'action'
+  | 'bonus-action'
+  | 'reaction'
+  | 'minute'
+  | 'hour';
+
+/** Единица длительности */
+export type DndDurationUnit =
+  | 'instantaneous'
+  | 'round'
+  | 'minute'
+  | 'hour'
+  | 'day'
+  | 'special'
+  | 'until-dispelled';
+
+/** Как заклинание доходит до цели */
+export type DndSpellDelivery = 'ranged' | 'melee' | 'self' | 'touch' | 'none';
+
+/** Тип цели */
+export type DndSpellTarget = 'creature' | 'self';
+
+/** Спасбросок заклинания */
+export type DndSpellSave = 'none' | DndAbility;
+
+/** Компоненты заклинания */
+export interface DndSpellComponents {
+  /** Вербальный */
+  verbal: boolean;
+  /** Соматический */
+  somatic: boolean;
+  /** Материальный */
+  material: boolean;
+  /** Описание материального компонента */
+  materialDescription?: string;
+}
+
+/**
+ * Своё заклинание, собранное из листа, — минимальная полная форма `Spell`
+ * системы (та же, что у её `buildPseudoSpell`).
+ */
+export interface DndHomebrewSpell {
+  /** Идентификатор */
+  id: string;
+  /** Тип записи */
+  type: 'spell';
+  /** Название */
+  name: string;
+  /** Круг (0 — заговор) */
+  level: number;
+  /** Школа */
+  school: DndSpellSchool;
+  /** Число единиц времени сотворения */
+  castingTimeValue: number;
+  /** Единица времени сотворения */
+  castingTimeUnit: DndCastingTimeUnit;
+  /** Компоненты */
+  components: DndSpellComponents;
+  /** Дистанция */
+  range: number;
+  /** Единица дистанции (`self` — «на себя», как в записях компендиума) */
+  rangeUnit: 'ft' | 'm' | 'mi' | 'self';
+  /** Особая дистанция («касание», «на себя») */
+  rangeSpecial?: string;
+  /** Число единиц длительности */
+  durationValue: number;
+  /** Единица длительности */
+  durationUnit: DndDurationUnit;
+  /** Концентрация */
+  concentration: boolean;
+  /** Ритуал */
+  ritual: boolean;
+  /** Тип цели */
+  targetType: DndSpellTarget;
+  /** Как доходит до цели */
+  deliveryType: DndSpellDelivery;
+  /** Спасбросок */
+  saveType: DndSpellSave;
+  /** Описание (markdown) */
+  description: string;
+  /** Источник — авторский контент */
+  sourceKey: 'hb';
+}
+
 /** Состояние счётчика ресурса на актёре */
 export interface DndCounterState {
   /** Ключ счётчика */

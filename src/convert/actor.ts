@@ -18,10 +18,13 @@ import type {
   DndGameItem,
   DndMovement,
 } from '@/types/dnd5e';
+import type { SpellImportResult } from '@/import/spells';
+import type { ActorSpell } from '@/spells/actorSpell';
 import type { VttgActorCreateInput } from '@/types/vttg';
 
 import { resolveTotalLevel } from '@/sheet/parse';
 import { collectSheetSpells } from '@/sheet/spells';
+import { isCustomSpellUrl } from '@/spells/match';
 
 import { buildBackground, buildClasses, buildSpecies } from './classes';
 import { buildCounters } from './counters';
@@ -34,9 +37,6 @@ import { buildUsedSpellSlots } from './slots';
 
 /** Базовый КД без доспеха */
 const DEFAULT_ARMOR_CLASS = 10;
-
-/** Префикс ссылки на контент, созданный пользователем на сайте */
-const CUSTOM_ENTRY_PREFIX = 'custom:';
 
 /** ID прибавки к лимиту подготовленных заклинаний, перенесённой с листа */
 const PREPARED_SPELLS_BONUS_ID = 'sheet-prepared-spells';
@@ -95,8 +95,8 @@ export interface CharacterActorInput extends VttgActorCreateInput {
   features: DndFeature[];
   /** Снаряжение */
   equipment: DndGameItem[];
-  /** Заклинания (импорт их не переносит) */
-  spells: never[];
+  /** Заклинания (из каталога мира или «Мастерской») */
+  spells: ActorSpell[];
   /** Активные эффекты актёра (эффекты предметов живут на предметах) */
   activeEffects: never[];
   /** Заметки */
@@ -232,47 +232,109 @@ function resolveInitiativeAbility(
 }
 
 /**
- * Проверяет, создано ли заклинание самим пользователем на сайте.
- *
- * Такие заклинания приходят со ссылкой `custom:<uuid>` вместо слага книги
- * (`hex-phb`): в компендиуме мира их нет, и совет «добавьте из компендиума»
- * к ним не подходит.
- *
- * @param url - ссылка заклинания с листа
- * @returns true, если заклинание своё
+ * Что известно о переносе заклинаний к моменту предупреждений:
+ * - `unsupported` — приложение не даёт модулю компендиум, переносить нечем;
+ * - `pending` — перенос будет (предупреждение до импорта);
+ * - итог переноса — после импорта.
  */
-function isCustomSpell(url: string | undefined): boolean {
-  return url?.startsWith(CUSTOM_ENTRY_PREFIX) ?? false;
+export type SpellNotice = 'unsupported' | 'pending' | SpellImportResult;
+
+/**
+ * Предупреждения о заклинаниях, когда перенести их нечем.
+ *
+ * @param sheet - лист персонажа
+ * @returns предупреждения
+ */
+function collectUnsupportedSpellWarnings(sheet: CharacterSheet): string[] {
+  const spells = collectSheetSpells(sheet, resolveTotalLevel(sheet));
+  const bookSpells = spells.filter((spell) => !isCustomSpellUrl(spell.url));
+  const customSpells = spells.filter((spell) => isCustomSpellUrl(spell.url));
+  const warnings: string[] = [];
+
+  if (bookSpells.length > 0) {
+    warnings.push(
+      `Заклинания (${bookSpells.length}) не переносятся: это приложение не даёт `
+        + 'модулю компендиум мира — добавьте их персонажу из компендиума после '
+        + `импорта: ${bookSpells.map((spell) => spell.name).join(', ')}.`,
+    );
+  }
+
+  if (customSpells.length > 0) {
+    warnings.push(
+      `Заклинания-копии с сайта (${customSpells.length}) не переносятся: у них `
+        + 'нет книжной ссылки — поищите их в компендиуме по названию: '
+        + `${customSpells.map((spell) => spell.name).join(', ')}.`,
+    );
+  }
+
+  return warnings;
+}
+
+/**
+ * Предупреждения о заклинаниях по итогу переноса.
+ *
+ * @param result - итог переноса
+ * @returns предупреждения
+ */
+function collectSpellResultWarnings(result: SpellImportResult): string[] {
+  const warnings: string[] = [];
+
+  if (result.createdInWorkshop.length > 0) {
+    warnings.push(
+      `Заклинания, которых нет в мире, заведены в «Мастерской» (`
+        + `${result.createdInWorkshop.length}) — проверьте их поля: `
+        + `${result.createdInWorkshop.join(', ')}.`,
+    );
+  }
+
+  for (const failed of result.failed) {
+    warnings.push(`Заклинание «${failed.name}» не перенесено: ${failed.reason}.`);
+  }
+
+  return warnings;
+}
+
+/**
+ * Предупреждения о заклинаниях листа.
+ *
+ * @param sheet - лист персонажа
+ * @param notice - что известно о переносе заклинаний
+ * @returns предупреждения
+ */
+function collectSpellWarnings(
+  sheet: CharacterSheet,
+  notice: SpellNotice,
+): string[] {
+  if (notice === 'unsupported') {
+    return collectUnsupportedSpellWarnings(sheet);
+  }
+
+  if (notice === 'pending') {
+    const count = collectSheetSpells(sheet, resolveTotalLevel(sheet)).length;
+
+    return count > 0
+      ? [
+          `Заклинания (${count}) переносятся из компендиума мира; которых в `
+            + 'мире нет, будут заведены в «Мастерской».',
+        ]
+      : [];
+  }
+
+  return collectSpellResultWarnings(notice);
 }
 
 /**
  * Собирает предупреждения о том, что лист несёт, а импорт не переносит.
  *
  * @param sheet - лист персонажа
+ * @param spellNotice - что известно о переносе заклинаний
  * @returns список предупреждений для мастера импорта
  */
-export function collectWarnings(sheet: CharacterSheet): string[] {
-  const warnings: string[] = [];
-
-  const spells = collectSheetSpells(sheet, resolveTotalLevel(sheet));
-  const bookSpells = spells.filter((spell) => !isCustomSpell(spell.url));
-  const customSpells = spells.filter((spell) => isCustomSpell(spell.url));
-
-  if (bookSpells.length > 0) {
-    warnings.push(
-      `Заклинания (${bookSpells.length}) не переносятся: их механику задаёт `
-        + 'компендиум мира — добавьте их персонажу из компендиума после импорта: '
-        + `${bookSpells.map((spell) => spell.name).join(', ')}.`,
-    );
-  }
-
-  if (customSpells.length > 0) {
-    warnings.push(
-      `Свои заклинания с сайта (${customSpells.length}) не переносятся, и в `
-        + 'компендиуме мира их нет — создайте их в мире заново: '
-        + `${customSpells.map((spell) => spell.name).join(', ')}.`,
-    );
-  }
+export function collectWarnings(
+  sheet: CharacterSheet,
+  spellNotice: SpellNotice = 'unsupported',
+): string[] {
+  const warnings = collectSpellWarnings(sheet, spellNotice);
 
   const featuresWithEffects = (sheet.features ?? []).filter(
     (feature) => (feature.activeEffects?.length ?? 0) > 0,
@@ -398,22 +460,34 @@ function buildToken(
   };
 }
 
+/** Что сборке черновика приносит сценарий импорта */
+export interface DraftContext {
+  /** ID пользователя, который импортирует (нет — неизвестен) */
+  ownerId?: string | null;
+  /**
+   * Готовый путь к картинке: файл мира, если её удалось перенести, иначе
+   * ссылка с листа. `undefined` — брать ссылку с листа как есть, `null` —
+   * картинки нет.
+   */
+  avatar?: string | null;
+  /** Итог переноса заклинаний (нет — приложение переносить их не умеет) */
+  spellImport?: SpellImportResult;
+}
+
 /**
  * Собирает черновик актёра из листа персонажа.
  *
  * @param sheet - разобранный лист персонажа
  * @param options - настройки импорта
- * @param ownerId - ID пользователя, который импортирует (null — неизвестен)
- * @param avatar - готовый путь к картинке: файл мира, если её удалось
- *   перенести, иначе ссылка с листа. `undefined` — брать ссылку с листа как есть
+ * @param context - что принёс сценарий импорта: владелец, картинка, заклинания
  * @returns черновик актёра и список предупреждений
  */
 export function buildActorDraft(
   sheet: CharacterSheet,
   options: ImportOptions,
-  ownerId: string | null,
-  avatar?: string | null,
+  context: DraftContext = {},
 ): ActorDraft {
+  const { ownerId = null, avatar, spellImport } = context;
   const description = options.importPersonality ? buildDescription(sheet) : '';
   const picture = avatar === undefined ? sheet.avatarUrl ?? null : avatar;
 
@@ -427,10 +501,13 @@ export function buildActorDraft(
     system: buildActorSystem(sheet),
     features: options.importFeatures ? buildFeatures(sheet) : [],
     equipment: options.importInventory ? buildInventory(sheet) : [],
-    spells: [],
+    spells: spellImport?.spells ?? [],
     activeEffects: [],
     notes: '',
   };
 
-  return { actor, warnings: collectWarnings(sheet) };
+  return {
+    actor,
+    warnings: collectWarnings(sheet, spellImport ?? 'unsupported'),
+  };
 }

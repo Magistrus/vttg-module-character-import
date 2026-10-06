@@ -39,7 +39,7 @@ function findItem(equipment: DndGameItem[], id: string): DndGameItem {
 }
 
 describe.skipIf(!hasLocalSheet)('buildActorDraft — нейтральная часть', () => {
-  const { actor } = buildActorDraft(sheet, fullOptions, 'user-1');
+  const { actor } = buildActorDraft(sheet, fullOptions, { ownerId: 'user-1' });
 
   it('берёт имя с листа, если своё не задано', () => {
     expect(actor.name).toBe('Гоги');
@@ -54,18 +54,15 @@ describe.skipIf(!hasLocalSheet)('buildActorDraft — нейтральная ча
       JSON.stringify({ ...fixture, avatarUrl: 'https://ttg.club/media/gogi.png' }),
     );
 
-    const { actor: fromSheet } = buildActorDraft(withPicture, fullOptions, null);
+    const { actor: fromSheet } = buildActorDraft(withPicture, fullOptions);
 
     expect(fromSheet.avatar).toBe('https://ttg.club/media/gogi.png');
     expect(fromSheet.token?.imageUrl).toBe('https://ttg.club/media/gogi.png');
 
     // Картинку перенесли в файлы мира — в актёра едет путь оттуда.
-    const { actor: uploaded } = buildActorDraft(
-      withPicture,
-      fullOptions,
-      null,
-      'avatars/gogi.webp',
-    );
+    const { actor: uploaded } = buildActorDraft(withPicture, fullOptions, {
+      avatar: 'avatars/gogi.webp',
+    });
 
     expect(uploaded.avatar).toBe('avatars/gogi.webp');
     expect(uploaded.token?.imageUrl).toBe('avatars/gogi.webp');
@@ -87,7 +84,7 @@ describe.skipIf(!hasLocalSheet)('buildActorDraft — нейтральная ча
 });
 
 describe.skipIf(!hasLocalSheet)('buildActorDraft — системные данные', () => {
-  const { actor } = buildActorDraft(sheet, fullOptions, null);
+  const { actor } = buildActorDraft(sheet, fullOptions);
   const system = actor.system;
 
   it('переносит характеристики как есть', () => {
@@ -202,7 +199,7 @@ describe.skipIf(!hasLocalSheet)('buildActorDraft — системные данн
       }),
     );
 
-    const tunedSystem = buildActorDraft(tuned, fullOptions, null).actor.system;
+    const tunedSystem = buildActorDraft(tuned, fullOptions).actor.system;
 
     expect(tunedSystem.preparedSpells).toEqual({
       custom: null,
@@ -235,7 +232,7 @@ describe.skipIf(!hasLocalSheet)('buildActorDraft — системные данн
     );
 
     expect(
-      buildActorDraft(odd, fullOptions, null).actor.system.carryingCapacity.size,
+      buildActorDraft(odd, fullOptions).actor.system.carryingCapacity.size,
     ).toBeNull();
   });
 
@@ -255,7 +252,7 @@ describe.skipIf(!hasLocalSheet)('buildActorDraft — системные данн
 });
 
 describe.skipIf(!hasLocalSheet)('buildActorDraft — черты и инвентарь', () => {
-  const { actor } = buildActorDraft(sheet, fullOptions, null);
+  const { actor } = buildActorDraft(sheet, fullOptions);
   const features = actor.features;
   const equipment = actor.equipment;
 
@@ -341,8 +338,7 @@ describe.skipIf(!hasLocalSheet)('buildActorDraft — черты и инвент�
   it('не переносит черты и инвентарь, если их выключили', () => {
     const { actor: lean } = buildActorDraft(
       sheet,
-      { ...fullOptions, importFeatures: false, importInventory: false },
-      null,
+      { ...fullOptions, importFeatures: false, importInventory: false }
     );
 
     expect(lean.features).toEqual([]);

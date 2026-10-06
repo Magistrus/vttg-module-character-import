@@ -72,6 +72,7 @@ describe('runImport', () => {
       actorName: 'Гоги Импортированный',
       featureCount: 9,
       itemCount: 13,
+      spellCount: 0,
       warnings: [],
     });
   });
