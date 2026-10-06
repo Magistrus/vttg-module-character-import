@@ -2,7 +2,7 @@ import type { VttgActorCreateInput, VttgModuleApi } from '@/types/vttg';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import fixture from '../../fixtures/dwarf-fighter.json';
+import { hasLocalSheet, localSheet as fixture } from '@/testing/localSheet';
 import { parseSheetText } from '@/sheet/parse';
 
 import { runImport } from './runImport';
@@ -54,7 +54,7 @@ function createApiStub(): {
 }
 
 describe('runImport', () => {
-  it('отправляет хосту собранного актёра и возвращает итог', async () => {
+  it.skipIf(!hasLocalSheet)('отправляет хосту собранного актёра и возвращает итог', async () => {
     const { api, create } = createApiStub();
 
     const result = await runImport(api, sheet, options);

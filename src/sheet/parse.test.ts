@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import fixture from '../../fixtures/dwarf-fighter.json';
+import { hasLocalSheet, localSheet as fixture } from '@/testing/localSheet';
 
 import {
   countCounters,
@@ -22,7 +22,7 @@ describe('isSheetFileName', () => {
 });
 
 describe('parseSheetText', () => {
-  it('разбирает лист персонажа с сайта', () => {
+  it.skipIf(!hasLocalSheet)('разбирает лист персонажа с сайта', () => {
     const sheet = parseSheetText(sheetText);
 
     expect(sheet.name).toBe('Гоги');
@@ -39,7 +39,7 @@ describe('parseSheetText', () => {
     );
   });
 
-  it('не спотыкается о незнакомые поля листа', () => {
+  it.skipIf(!hasLocalSheet)('не спотыкается о незнакомые поля листа', () => {
     const sheet = parseSheetText(
       JSON.stringify({ ...fixture, somethingNew: { nested: true } }),
     );
@@ -48,7 +48,7 @@ describe('parseSheetText', () => {
   });
 });
 
-describe('summarizeSheet', () => {
+describe.skipIf(!hasLocalSheet)('summarizeSheet', () => {
   const summary = summarizeSheet(parseSheetText(sheetText));
 
   it('собирает шапку персонажа', () => {
@@ -78,7 +78,7 @@ describe('summarizeSheet', () => {
   });
 });
 
-describe('resolveTotalLevel', () => {
+describe.skipIf(!hasLocalSheet)('resolveTotalLevel', () => {
   it('берёт уровень с листа', () => {
     expect(resolveTotalLevel(parseSheetText(sheetText))).toBe(1);
   });
@@ -96,7 +96,7 @@ describe('resolveTotalLevel', () => {
   });
 });
 
-describe('countCounters', () => {
+describe.skipIf(!hasLocalSheet)('countCounters', () => {
   it('не считает один ресурс дважды', () => {
     expect(countCounters(parseSheetText(sheetText))).toBe(1);
   });

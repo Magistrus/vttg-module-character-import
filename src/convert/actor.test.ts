@@ -3,7 +3,7 @@ import type { DndGameItem } from '@/types/dnd5e';
 
 import { describe, expect, it } from 'vitest';
 
-import fixture from '../../fixtures/dwarf-fighter.json';
+import { hasLocalSheet, localSheet as fixture } from '@/testing/localSheet';
 import { parseSheetText } from '@/sheet/parse';
 
 import { buildActorDraft, buildDescription, collectWarnings } from './actor';
@@ -38,7 +38,7 @@ function findItem(equipment: DndGameItem[], id: string): DndGameItem {
   return item;
 }
 
-describe('buildActorDraft — нейтральная часть', () => {
+describe.skipIf(!hasLocalSheet)('buildActorDraft — нейтральная часть', () => {
   const { actor } = buildActorDraft(sheet, fullOptions, 'user-1');
 
   it('берёт имя с листа, если своё не задано', () => {
@@ -86,7 +86,7 @@ describe('buildActorDraft — нейтральная часть', () => {
   });
 });
 
-describe('buildActorDraft — системные данные', () => {
+describe.skipIf(!hasLocalSheet)('buildActorDraft — системные данные', () => {
   const { actor } = buildActorDraft(sheet, fullOptions, null);
   const system = actor.system;
 
@@ -254,7 +254,7 @@ describe('buildActorDraft — системные данные', () => {
   });
 });
 
-describe('buildActorDraft — черты и инвентарь', () => {
+describe.skipIf(!hasLocalSheet)('buildActorDraft — черты и инвентарь', () => {
   const { actor } = buildActorDraft(sheet, fullOptions, null);
   const features = actor.features;
   const equipment = actor.equipment;
@@ -350,7 +350,7 @@ describe('buildActorDraft — черты и инвентарь', () => {
   });
 });
 
-describe('описание и предупреждения', () => {
+describe.skipIf(!hasLocalSheet)('описание и предупреждения', () => {
   it('складывает внешность персонажа в описание', () => {
     expect(buildDescription(sheet)).toContain(
       '**Мировоззрение:** Законопослушный Нейтральный',
