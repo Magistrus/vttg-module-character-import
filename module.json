@@ -5,6 +5,8 @@
   "description": "Импорт персонажа с листа TTG Club (экспорт JSON): характеристики, класс, вид, предыстория, владения, черты, инвентарь, счётчики и заклинания — одним актёром мира.",
   "icon": "tabler:user-plus",
   "author": "TTG Club",
+  "manifest": "https://raw.githubusercontent.com/Magistrus/vttg-module-character-import/main/module.json",
+  "download": "https://github.com/Magistrus/vttg-module-character-import/releases/latest/download/character-import.zip",
   "language": "ru",
   "compatibleSystems": ["dnd5e-2024"],
   "compatibility": {
