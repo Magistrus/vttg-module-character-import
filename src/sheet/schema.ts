@@ -273,6 +273,9 @@ export const characterSheetSchema = z
     species: speciesSchema.nullable().optional(),
     size: z.string().nullable().optional(),
     features: z.array(featureSchema).optional(),
+    // Эффекты самого персонажа (наложенные вручную); форму разбирает
+    // `convert/effects`: один непонятный эффект не должен отклонять лист.
+    activeEffects: z.array(z.unknown()).optional(),
     spells: z.array(z.unknown()).optional(),
     spellSlots: z.array(z.unknown()).optional(),
     spellcasting: z
