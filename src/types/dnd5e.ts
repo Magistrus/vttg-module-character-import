@@ -442,6 +442,50 @@ export interface DndEffectChange {
   priority: number;
 }
 
+/** Длительность эффекта актёра (форма `EffectDuration` системы) */
+export interface DndEffectDuration {
+  /** Вид длительности */
+  type: 'permanent' | 'rounds' | 'minutes' | 'hours' | 'days' | 'turn' | 'special';
+  /** Сколько единиц длится */
+  value?: number;
+  /** Чей ход отмеряет эффект «до хода» */
+  turnAnchor?: 'carrier' | 'source';
+  /** Начало или конец хода */
+  turnTiming?: 'start' | 'end';
+}
+
+/**
+ * Активный эффект актёра — то, что висит на самом персонаже (прибавка
+ * Мудрости от «Улучшения характеристик», преимущество на спасброски).
+ * Подмножество `ActiveEffect` системы: только поля, которые модуль заполняет.
+ */
+export interface DndActorActiveEffect {
+  /** Идентификатор эффекта */
+  id: string;
+  /** Название (видно на листе) */
+  name: string;
+  /** Описание эффекта */
+  description: string;
+  /** Иконка `tabler:<имя>` */
+  icon?: string;
+  /** Отключён ли эффект */
+  disabled: boolean;
+  /** Источник эффекта */
+  origin: 'feature' | 'manual' | 'condition' | 'spell' | 'item';
+  /** ID особенности-источника на листе актёра */
+  originId?: string;
+  /** Эффект актёра никуда не переносится */
+  transfer: false;
+  /** Длительность */
+  duration: DndEffectDuration;
+  /** Числовые изменения */
+  changes: DndEffectChange[];
+  /** Булевые флаги */
+  flags: string[];
+  /** Состояние, которое эффект изображает */
+  conditionKey?: string;
+}
+
 /**
  * Активный эффект предмета.
  *

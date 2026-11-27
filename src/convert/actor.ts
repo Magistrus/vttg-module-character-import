@@ -11,6 +11,7 @@
 
 import type { CharacterSheet } from '@/sheet/schema';
 import type {
+  DndActorActiveEffect,
   DndActorSystem,
   DndArmorClass,
   DndCurrency,
@@ -28,6 +29,7 @@ import { isCustomSpellUrl } from '@/spells/match';
 
 import { buildBackground, buildClasses, buildSpecies } from './classes';
 import { buildCounters } from './counters';
+import { buildActorEffects } from './effects';
 import { buildFeatures } from './features';
 import { buildInventory, collectUnmappedBonusItems } from './inventory';
 import { CURRENCY_BY_COIN, isAbilityKey, sizeByLabel } from './keys';
@@ -98,7 +100,7 @@ export interface CharacterActorInput extends VttgActorCreateInput {
   /** Заклинания (из каталога мира или «Мастерской») */
   spells: ActorSpell[];
   /** Активные эффекты актёра (эффекты предметов живут на предметах) */
-  activeEffects: never[];
+  activeEffects: DndActorActiveEffect[];
   /** Заметки */
   notes: string;
 }
@@ -336,17 +338,7 @@ export function collectWarnings(
 ): string[] {
   const warnings = collectSpellWarnings(sheet, spellNotice);
 
-  const featuresWithEffects = (sheet.features ?? []).filter(
-    (feature) => (feature.activeEffects?.length ?? 0) > 0,
-  );
-
-  if (featuresWithEffects.length > 0) {
-    warnings.push(
-      'Эффекты черт не переносятся автоматически — описание черты перенесено, '
-        + 'а сам эффект наложите на листе: '
-        + `${featuresWithEffects.map((feature) => feature.name).join(', ')}.`,
-    );
-  }
+  warnings.push(...buildActorEffects(sheet, true).warnings);
 
   const exhaustion = sheet.health?.exhaustion ?? 0;
 
@@ -502,7 +494,7 @@ export function buildActorDraft(
     features: options.importFeatures ? buildFeatures(sheet) : [],
     equipment: options.importInventory ? buildInventory(sheet) : [],
     spells: spellImport?.spells ?? [],
-    activeEffects: [],
+    activeEffects: buildActorEffects(sheet, options.importFeatures).effects,
     notes: '',
   };
 

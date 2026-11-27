@@ -30,7 +30,7 @@ const FEATURE_TYPE_BY_ORIGIN: Record<string, DndFeature['featureType']> = {
  * @param index - её позиция в списке
  * @returns идентификатор особенности
  */
-function resolveFeatureId(feature: SheetFeature, index: number): string {
+export function resolveFeatureId(feature: SheetFeature, index: number): string {
   return feature.id ?? `sheet-feature-${index + 1}`;
 }
 
