@@ -1,8 +1,8 @@
 {
   "id": "character-import",
   "name": "Импорт персонажей",
-  "version": "0.3.0",
-  "description": "Импорт персонажа с листа TTG Club (экспорт JSON): характеристики, класс, вид, предыстория, владения, черты, инвентарь, счётчики и заклинания — одним актёром мира.",
+  "version": "0.4.0",
+  "description": "Импорт персонажа с листа TTG Club (экспорт JSON): характеристики, класс, вид, предыстория, владения, черты, инвентарь, счётчики, заклинания и активные эффекты — одним актёром мира.",
   "icon": "tabler:user-plus",
   "author": "Magistrus",
   "manifest": "https://raw.githubusercontent.com/Magistrus/vttg-module-character-import/main/module.json",
